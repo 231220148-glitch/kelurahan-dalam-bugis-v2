@@ -145,11 +145,51 @@ body.editing .delBtn{display:inline-flex;align-items:center;gap:4px;}
 }
 .toast.show{transform:translateX(-50%) translateY(0);}
 
+/* ===== ADMIN LOGIN MODAL ===== */
+.adminOverlay{
+  position:fixed;inset:0;z-index:200;background:rgba(8,40,56,.55);
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.adminOverlay.show{display:flex;}
+.adminModal{
+  background:var(--white);border-radius:12px;max-width:360px;width:100%;
+  padding:30px 28px;box-shadow:0 20px 50px rgba(0,0,0,.3);
+}
+.adminModal h3{font-size:19px;margin-bottom:6px;}
+.adminModal p{font-size:13px;color:var(--ink-soft);margin:0 0 18px;}
+.adminModal input{
+  width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:8px;
+  font-size:14px;font-family:'Public Sans',sans-serif;margin-bottom:10px;
+}
+.adminModal input:focus{outline:none;border-color:var(--navy);}
+.adminModal .err{font-size:12.5px;color:var(--red);min-height:16px;margin-bottom:6px;font-family:'Space Mono',monospace;}
+.adminModal .btnRow{display:flex;gap:10px;margin-top:10px;}
+.adminModal .btnRow .saveBtn{flex:1;text-align:center;}
+.adminModal .btnRow .discardBtn{flex:1;text-align:center;color:var(--navy);border-color:var(--line);}
+.adminBadge{
+  display:none;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:11px;
+  color:var(--navy);background:rgba(13,59,84,.08);padding:6px 12px;border-radius:100px;
+}
+.adminBadge.show{display:inline-flex;}
+.logoutBtn{
+  display:none;border:1px solid var(--line);background:var(--white);color:var(--ink-soft);
+  padding:7px 12px;border-radius:100px;font-size:12px;font-weight:600;
+}
+.logoutBtn.show{display:inline-block;}
+
 /* ===== HERO ===== */
 .hero{
   background:linear-gradient(180deg,var(--navy) 0%,var(--navy-deep) 100%);
+  background-size:cover;background-position:center;
   color:var(--paper);position:relative;overflow:hidden;
 }
+.heroBgBtn{
+  display:none;position:absolute;top:18px;right:28px;z-index:5;
+  font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.03em;
+  border:1.5px dashed var(--gold-soft);background:rgba(8,40,56,.55);color:var(--gold-soft);
+  border-radius:6px;padding:7px 12px;align-items:center;gap:6px;
+}
+body.editing .heroBgBtn{display:inline-flex;}
 .hero .wrap{
   display:grid;grid-template-columns:1.1fr .9fr;gap:40px;
   padding:64px 28px 0;align-items:center;
@@ -398,15 +438,20 @@ body.editing .dataToolbar{display:flex;}
         <button class="toolbarBtn" id="exportBtn">⇩ Ekspor Data</button>
         <button class="toolbarBtn" id="importBtn">⇧ Impor Data</button>
         <input type="file" id="importFile" accept="application/json" style="display:none;">
+        <button class="toolbarBtn" id="importDocBtn">⇧ Impor Word/PDF/Excel/Gambar</button>
+        <input type="file" id="importDocFile" accept=".docx,.pdf,.xlsx,.xls,.csv,.jpg,.jpeg,.png,image/jpeg,image/png" multiple style="display:none;">
       </div>
+      <span class="adminBadge" id="adminBadge">🔒 Admin</span>
       <button class="editToggle" id="editToggle"><span class="dot"></span><span id="editToggleLabel">Mode Edit</span></button>
+      <button class="logoutBtn" id="logoutBtn">Keluar</button>
       <button id="navMobileBtn">☰</button>
     </div>
   </nav>
 </header>
 
 <!-- HERO -->
-<section class="hero">
+<section class="hero" id="heroSection">
+  <button class="heroBgBtn" id="editHeroBg">🖼 Ganti Background</button>
   <div class="wrap">
     <div>
       <div class="hero-eyebrow"><span>Profil Kelurahan</span><span class="coord">0°01′ LU · Tepi Sungai Kapuas</span></div>
@@ -567,7 +612,7 @@ body.editing .dataToolbar{display:flex;}
       </div>
       <div>
         <table class="penyakit-table">
-          <thead><tr><th>Penyakit</th><th>RW</th><th>Kasus</th><th>Status</th><th>Update</th><th></th></tr></thead>
+          <thead><tr><th>Penyakit</th><th>RW</th><th>Kasus</th><th>Status</th><th>Update</th><th>Titik</th><th></th></tr></thead>
           <tbody id="penyakitTableBody"></tbody>
         </table>
       </div>
@@ -665,6 +710,19 @@ body.editing .dataToolbar{display:flex;}
   </div>
 </footer>
 
+<div class="adminOverlay" id="adminOverlay">
+  <div class="adminModal">
+    <h3>Masuk sebagai Admin</h3>
+    <p>Hanya perangkat kelurahan yang berwenang mengedit isi situs ini. Masukkan kata sandi admin untuk mengaktifkan Mode Edit.</p>
+    <input type="password" id="adminPasswordInput" placeholder="Kata sandi admin" autocomplete="off">
+    <div class="err" id="adminError"></div>
+    <div class="btnRow">
+      <button class="discardBtn" id="adminCancelBtn">Batal</button>
+      <button class="saveBtn" id="adminSubmitBtn">Masuk</button>
+    </div>
+  </div>
+</div>
+
 <div class="saveBar" id="saveBar">
   <div class="wrap">
     <span class="msg">Mode Edit aktif — perubahan disimpan untuk semua pengunjung situs ini.</span>
@@ -678,7 +736,20 @@ body.editing .dataToolbar{display:flex;}
 <div class="toast" id="toast">Tersimpan</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Library untuk fitur impor Word (.docx), PDF, dan Excel/CSV. Dimuat dari CDN,
+     jadi fitur ini butuh koneksi internet saat dipakai. -->
+<script src="https://unpkg.com/mammoth@1.7.0/mammoth.browser.min.js"></script>
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <script>
+  if(typeof pdfjsLib !== 'undefined'){
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+  }
+</script>
+<script>
+/* ============================================================
+   MODULE 1: STATE APLIKASI & DATA DEFAULT
+   ============================================================ */
 const STORAGE_KEY = 'kelurahan-dalam-bugis:site-content-v1';
 let editing = false;
 let dirty = false;
@@ -718,9 +789,17 @@ const defaultPetugasKesehatan = [
   {nama:'Nama Kader', jabatan:'Kader Posyandu Lansia', kontak:'0812-0000-0013', aktif:true}
 ];
 
-let state = { texts:{}, berita:null, layanan:null, galeri:null, wilayahMap:null, penyakit:null, petugasDesa:null, petugasKesehatan:null };
-let wilayahMapObj = null, kesehatanMapObj = null;
+const defaultHeroBg = null; // null = pakai gradasi navy bawaan
 
+let state = { texts:{}, heroBg:null, berita:null, layanan:null, galeri:null, wilayahMap:null, penyakit:null, petugasDesa:null, petugasKesehatan:null };
+let wilayahMapObj = null, kesehatanMapObj = null;
+let pendingClickLatLng = null; // titik yang baru diklik admin di peta kesehatan, menunggu dipakai
+
+</script>
+<script>
+/* ============================================================
+   MODULE 2: PENYIMPANAN DATA (STORAGE) & MUAT/SIMPAN
+   ============================================================ */
 /* ---------- storage wrapper ----------
    Bekerja di browser manapun lewat localStorage (data tersimpan per-perangkat/browser).
    Jika file ini dibuka di dalam pratinjau Claude (window.storage tersedia), data
@@ -746,7 +825,7 @@ async function loadState(){
     const res = await storageGet('site-data');
     if(res && res.value){
       const parsed = JSON.parse(res.value);
-      state = Object.assign({texts:{},berita:null,layanan:null,galeri:null,wilayahMap:null,penyakit:null,petugasDesa:null,petugasKesehatan:null}, parsed);
+      state = Object.assign({texts:{},heroBg:null,berita:null,layanan:null,galeri:null,wilayahMap:null,penyakit:null,petugasDesa:null,petugasKesehatan:null}, parsed);
     }
   }catch(e){ /* belum ada data tersimpan, pakai default */ }
   if(!state.berita) state.berita = defaultBerita;
@@ -757,6 +836,7 @@ async function loadState(){
   if(!state.petugasDesa) state.petugasDesa = defaultPetugasDesa;
   if(!state.petugasKesehatan) state.petugasKesehatan = defaultPetugasKesehatan;
   applyTexts();
+  updateHeroBg();
   renderBerita();
   renderLayanan();
   renderGaleri();
@@ -801,6 +881,11 @@ function showToast(msg){
   setTimeout(()=>t.classList.remove('show'), 2200);
 }
 
+</script>
+<script>
+/* ============================================================
+   MODULE 3: RENDER DAFTAR (BERITA, LAYANAN, GALERI, PENYAKIT, PETUGAS)
+   ============================================================ */
 /* ---------- render lists ---------- */
 function renderBerita(){
   const grid = document.getElementById('beritaGrid');
@@ -862,10 +947,37 @@ function renderPenyakit(){
       <td data-list="penyakit" data-idx="${i}" data-field="jumlah" contenteditable="false">${p.jumlah}</td>
       <td><span class="status-pill status-${p.status}" data-status-idx="${i}" title="${editing?'Klik untuk ganti status':''}">${p.status}</span></td>
       <td data-list="penyakit" data-idx="${i}" data-field="tanggal" contenteditable="false">${p.tanggal}</td>
+      <td><button class="delBtn" data-setloc="${i}" title="Atur titik lokasi di peta">📍</button></td>
       <td><button class="delBtn" data-remove="penyakit" data-idx="${i}">✕</button></td>`;
     tbody.appendChild(tr);
   });
   bindListFields();
+  document.querySelectorAll('[data-setloc]').forEach(btn=>{
+    btn.onclick = ()=>{
+      if(!editing) return;
+      const idx = +btn.getAttribute('data-setloc');
+      const p = state.penyakit[idx];
+      if(pendingClickLatLng){
+        p.lat = pendingClickLatLng.lat;
+        p.lng = pendingClickLatLng.lng;
+        pendingClickLatLng = null;
+        if(kesehatanMapObj && kesehatanMapObj._pickMarker){
+          kesehatanMapObj.removeLayer(kesehatanMapObj._pickMarker);
+          kesehatanMapObj._pickMarker = null;
+        }
+      }else{
+        const lat = prompt(`Latitude untuk "${p.penyakit}" (${p.rw}):`, p.lat);
+        if(lat === null) return;
+        const lng = prompt(`Longitude untuk "${p.penyakit}" (${p.rw}):`, p.lng);
+        if(lng === null) return;
+        p.lat = parseFloat(lat) || p.lat;
+        p.lng = parseFloat(lng) || p.lng;
+      }
+      updateKesehatanMap();
+      markDirty();
+      showToast(`Titik "${p.penyakit}" diperbarui`);
+    };
+  });
   document.querySelectorAll('[data-status-idx]').forEach(pill=>{
     pill.onclick = ()=>{
       if(!editing) return;
@@ -909,6 +1021,11 @@ function renderPetugas(listKey, gridId){
   });
 }
 
+</script>
+<script>
+/* ============================================================
+   MODULE 4: PETA (LEAFLET) & BINDING FIELD DAFTAR
+   ============================================================ */
 /* ---------- peta (Leaflet) ---------- */
 function initMaps(){
   if(typeof L === 'undefined') return; // Leaflet gagal dimuat (mis. tidak ada koneksi internet)
@@ -927,6 +1044,15 @@ function initMaps(){
       attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
     }).addTo(kesehatanMapObj);
     kesehatanMapObj._circles = [];
+    kesehatanMapObj.on('click', e=>{
+      if(!editing) return; // hanya admin dalam Mode Edit yang bisa memilih titik
+      pendingClickLatLng = e.latlng;
+      if(kesehatanMapObj._pickMarker) kesehatanMapObj.removeLayer(kesehatanMapObj._pickMarker);
+      kesehatanMapObj._pickMarker = L.circleMarker(e.latlng, {
+        radius:8, color:'#0d3b54', fillColor:'#c8963e', fillOpacity:.9, weight:2
+      }).addTo(kesehatanMapObj).bindPopup('Titik terpilih — pakai lewat tombol "+ Tambah Data Penyakit" atau "📍 Atur Titik" pada baris tabel.').openPopup();
+      showToast('Titik dipilih di peta — sekarang tambah atau atur data penyakit');
+    });
   }
   updateWilayahMap();
   updateKesehatanMap();
@@ -966,6 +1092,26 @@ document.getElementById('editWilayahMap').onclick = ()=>{
   markDirty();
 };
 
+/* ---------- background awal (hero) ---------- */
+function updateHeroBg(){
+  const hero = document.getElementById('heroSection');
+  if(state.heroBg){
+    hero.style.backgroundImage = `linear-gradient(180deg, rgba(13,59,84,.82), rgba(8,40,56,.9)), url('${state.heroBg}')`;
+  }else{
+    hero.style.backgroundImage = ''; // kembali ke gradasi navy bawaan dari CSS
+  }
+}
+document.getElementById('editHeroBg').onclick = ()=>{
+  if(!editing) return;
+  const url = prompt('Tempelkan URL gambar background (kosongkan untuk kembali ke warna navy bawaan):', state.heroBg || '');
+  if(url === null) return;
+  state.heroBg = url.trim() || null;
+  updateHeroBg();
+  markDirty();
+};
+
+/* ---------- pilih titik lokasi penyakit langsung dari peta ---------- */
+
 function bindListFields(){
   document.querySelectorAll('[data-list]').forEach(el=>{
     el.oninput = ()=>{
@@ -997,19 +1143,109 @@ function markDirty(){
   if(editing) document.getElementById('saveBar').classList.add('show');
 }
 
+</script>
+<script>
+/* ============================================================
+   MODULE 5: OTENTIKASI ADMIN & MODE EDIT
+   ============================================================ */
+/* ---------- admin auth ----------
+   Situs ini statis (tanpa server), jadi ini BUKAN keamanan tingkat server —
+   siapa pun yang membuka "View Source" bisa melihat hash kata sandi ini.
+   Tujuannya hanya mencegah pengunjung publik biasa iseng mengaktifkan Mode Edit.
+   Untuk keamanan sesungguhnya, publikasikan situs ini di belakang login server/CMS.
+
+   Ganti kata sandi default dengan cara:
+   1. Buka console browser (F12), jalankan:
+        crypto.subtle.digest('SHA-256', new TextEncoder().encode('kata-sandi-baru'))
+          .then(b=>console.log([...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')))
+   2. Salin hasil hash-nya ke ADMIN_PASSWORD_HASH di bawah ini.
+   Kata sandi default saat ini: admin123 */
+const ADMIN_PASSWORD_HASH = '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9';
+const ADMIN_SESSION_KEY = 'kdb-admin-session';
+let isAdmin = false;
+
+async function sha256Hex(text){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function setAdminUI(on){
+  isAdmin = on;
+  document.getElementById('adminBadge').classList.toggle('show', on);
+  document.getElementById('logoutBtn').classList.toggle('show', on);
+}
+
+function restoreAdminSession(){
+  if(sessionStorage.getItem(ADMIN_SESSION_KEY) === '1') setAdminUI(true);
+}
+
+const adminOverlay = document.getElementById('adminOverlay');
+const adminPasswordInput = document.getElementById('adminPasswordInput');
+const adminError = document.getElementById('adminError');
+
+function openAdminLogin(){
+  adminError.textContent = '';
+  adminPasswordInput.value = '';
+  adminOverlay.classList.add('show');
+  setTimeout(()=>adminPasswordInput.focus(), 50);
+}
+function closeAdminLogin(){
+  adminOverlay.classList.remove('show');
+}
+document.getElementById('adminCancelBtn').onclick = closeAdminLogin;
+adminOverlay.addEventListener('click', e=>{ if(e.target === adminOverlay) closeAdminLogin(); });
+
+async function attemptAdminLogin(){
+  const val = adminPasswordInput.value;
+  if(!val){ adminError.textContent = 'Masukkan kata sandi.'; return; }
+  const hash = await sha256Hex(val);
+  if(hash === ADMIN_PASSWORD_HASH){
+    sessionStorage.setItem(ADMIN_SESSION_KEY, '1');
+    setAdminUI(true);
+    closeAdminLogin();
+    enterEditMode();
+  }else{
+    adminError.textContent = 'Kata sandi salah, coba lagi.';
+  }
+}
+document.getElementById('adminSubmitBtn').onclick = attemptAdminLogin;
+adminPasswordInput.addEventListener('keydown', e=>{ if(e.key === 'Enter') attemptAdminLogin(); });
+
+document.getElementById('logoutBtn').onclick = ()=>{
+  if(editing) exitEditMode();
+  sessionStorage.removeItem(ADMIN_SESSION_KEY);
+  setAdminUI(false);
+  showToast('Keluar dari mode admin');
+};
+
 /* ---------- edit mode toggle ---------- */
 const editToggle = document.getElementById('editToggle');
 const editLabel = document.getElementById('editToggleLabel');
+
+function enterEditMode(){
+  editing = true;
+  document.body.classList.add('editing');
+  editToggle.classList.add('on');
+  editLabel.textContent = 'Selesai Edit';
+  document.querySelectorAll('[data-editable]').forEach(el=>el.setAttribute('contenteditable', true));
+  document.querySelectorAll('[data-list]').forEach(el=>el.setAttribute('contenteditable', true));
+}
+function exitEditMode(){
+  editing = false;
+  document.body.classList.remove('editing');
+  editToggle.classList.remove('on');
+  editLabel.textContent = 'Mode Edit';
+  document.querySelectorAll('[data-editable]').forEach(el=>el.setAttribute('contenteditable', false));
+  document.querySelectorAll('[data-list]').forEach(el=>el.setAttribute('contenteditable', false));
+  document.getElementById('saveBar').classList.remove('show');
+}
+
 editToggle.onclick = ()=>{
-  editing = !editing;
-  document.body.classList.toggle('editing', editing);
-  editToggle.classList.toggle('on', editing);
-  editLabel.textContent = editing ? 'Selesai Edit' : 'Mode Edit';
-  document.querySelectorAll('[data-editable]').forEach(el=>el.setAttribute('contenteditable', editing));
-  document.querySelectorAll('[data-list]').forEach(el=>el.setAttribute('contenteditable', editing));
-  if(!editing){
-    document.getElementById('saveBar').classList.remove('show');
+  if(!isAdmin){
+    openAdminLogin();
+    return;
   }
+  if(editing) exitEditMode(); else enterEditMode();
 };
 
 document.querySelectorAll('[data-editable]').forEach(el=>{
@@ -1024,6 +1260,11 @@ document.getElementById('discardBtn').onclick = ()=>{
   showToast('Perubahan dibatalkan');
 };
 
+</script>
+<script>
+/* ============================================================
+   MODULE 6: TOMBOL TAMBAH DATA
+   ============================================================ */
 /* ---------- add buttons ---------- */
 document.getElementById('addBerita').onclick = ()=>{
   state.berita.unshift({tanggal:'Tanggal', judul:'Judul berita baru', ringkas:'Tulis ringkasan berita di sini.'});
@@ -1046,12 +1287,25 @@ document.getElementById('galeriAdd').onclick = ()=>{
 document.getElementById('addPenyakit').onclick = ()=>{
   const rw = prompt('Data untuk RW berapa? (mis. RW 01)', 'RW 01') || 'RW 01';
   const wm = state.wilayahMap;
+  let lat, lng;
+  const usedClick = !!pendingClickLatLng;
+  if(pendingClickLatLng){
+    lat = pendingClickLatLng.lat; lng = pendingClickLatLng.lng;
+    pendingClickLatLng = null;
+    if(kesehatanMapObj && kesehatanMapObj._pickMarker){
+      kesehatanMapObj.removeLayer(kesehatanMapObj._pickMarker);
+      kesehatanMapObj._pickMarker = null;
+    }
+  }else{
+    lat = wm.lat + (Math.random()-0.5)*0.01;
+    lng = wm.lng + (Math.random()-0.5)*0.01;
+  }
   state.penyakit.unshift({
-    penyakit:'Nama Penyakit', rw, jumlah:1, status:'Aktif', tanggal:'Tanggal',
-    lat: wm.lat + (Math.random()-0.5)*0.01, lng: wm.lng + (Math.random()-0.5)*0.01
+    penyakit:'Nama Penyakit', rw, jumlah:1, status:'Aktif', tanggal:'Tanggal', lat, lng
   });
   renderPenyakit();
   markDirty();
+  showToast(usedClick ? 'Data ditambahkan di titik yang dipilih' : 'Data ditambahkan — atur titik lewat tombol 📍 pada baris tabel');
 };
 document.getElementById('addPetugasDesa').onclick = ()=>{
   state.petugasDesa.unshift({nama:'Nama Petugas', jabatan:'Jabatan', kontak:'08xx-xxxx-xxxx', aktif:true});
@@ -1077,6 +1331,11 @@ document.getElementById('addRtRow').onclick = ()=>{
   markDirty();
 };
 
+</script>
+<script>
+/* ============================================================
+   MODULE 7: TAB NAVIGASI (PROFIL & PETUGAS)
+   ============================================================ */
 /* ---------- tabs ---------- */
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.onclick = ()=>{
@@ -1097,6 +1356,11 @@ document.querySelectorAll('[data-tab2]').forEach(btn=>{
   };
 });
 
+</script>
+<script>
+/* ============================================================
+   MODULE 8: EKSPOR / IMPOR DATA (JSON)
+   ============================================================ */
 /* ---------- ekspor / impor data ---------- */
 document.getElementById('exportBtn').onclick = ()=>{
   captureTexts();
@@ -1117,7 +1381,7 @@ document.getElementById('importFile').onchange = (e)=>{
   reader.onload = async ()=>{
     try{
       const parsed = JSON.parse(reader.result);
-      state = Object.assign({texts:{},berita:null,layanan:null,galeri:null,wilayahMap:null,penyakit:null,petugasDesa:null,petugasKesehatan:null}, parsed);
+      state = Object.assign({texts:{},heroBg:null,berita:null,layanan:null,galeri:null,wilayahMap:null,penyakit:null,petugasDesa:null,petugasKesehatan:null}, parsed);
       if(!state.berita) state.berita = defaultBerita;
       if(!state.layanan) state.layanan = defaultLayanan;
       if(!state.galeri) state.galeri = defaultGaleri;
@@ -1126,6 +1390,7 @@ document.getElementById('importFile').onchange = (e)=>{
       if(!state.petugasDesa) state.petugasDesa = defaultPetugasDesa;
       if(!state.petugasKesehatan) state.petugasKesehatan = defaultPetugasKesehatan;
       applyTexts();
+      updateHeroBg();
       renderBerita(); renderLayanan(); renderGaleri(); renderPenyakit();
       renderPetugas('petugasDesa','petugasDesaGrid');
       renderPetugas('petugasKesehatan','petugasKesehatanGrid');
@@ -1140,6 +1405,171 @@ document.getElementById('importFile').onchange = (e)=>{
   e.target.value = '';
 };
 
+</script>
+<script>
+/* ============================================================
+   MODULE 9: IMPOR WORD / PDF / EXCEL / GAMBAR
+   ============================================================
+   Semua parsing berjalan di browser lewat library eksternal (mammoth,
+   pdf.js, SheetJS) yang dimuat dari CDN — butuh koneksi internet.
+   Gambar (jpg/png) tidak diproses lewat library, cukup dibaca sebagai
+   file lalu ditambahkan ke Galeri. */
+
+const LIST_FIELD_MAP = {
+  berita:   { fields:['tanggal','judul','ringkas'],           aliases:{tanggal:['tanggal','date','tgl'], judul:['judul','title','headline'], ringkas:['ringkas','isi','ringkasan','deskripsi','summary']} },
+  layanan:  { fields:['nama','syarat'],                        aliases:{nama:['nama','layanan','service','judul'], syarat:['syarat','persyaratan','ketentuan','requirement']} },
+  penyakit: { fields:['penyakit','rw','jumlah','status','tanggal'], aliases:{penyakit:['penyakit','nama penyakit','disease'], rw:['rw','wilayah'], jumlah:['jumlah','kasus','jml','cases'], status:['status'], tanggal:['tanggal','update','date']} },
+  petugasDesa:       { fields:['nama','jabatan','kontak','aktif'], aliases:{nama:['nama','name'], jabatan:['jabatan','posisi','jabatan/posisi','role'], kontak:['kontak','telepon','no hp','hp','contact'], aktif:['aktif','status']} },
+  petugasKesehatan:  { fields:['nama','jabatan','kontak','aktif'], aliases:{nama:['nama','name'], jabatan:['jabatan','posisi','role'], kontak:['kontak','telepon','no hp','hp','contact'], aktif:['aktif','status']} }
+};
+const LIST_LABELS = {
+  berita:'Berita & Pengumuman', layanan:'Layanan Kelurahan', penyakit:'Data Penyakit (Kesehatan)',
+  petugasDesa:'Petugas Desa', petugasKesehatan:'Petugas Kesehatan'
+};
+
+function pickTargetList(){
+  const opts = Object.keys(LIST_LABELS);
+  const menu = opts.map((k,i)=>`${i+1}. ${LIST_LABELS[k]}`).join('\n');
+  const choice = prompt(`Data ini mau dimasukkan ke bagian mana?\n${menu}\n\nKetik angka pilihan:`, '3');
+  if(choice === null) return null;
+  const idx = parseInt(choice,10) - 1;
+  return opts[idx] || null;
+}
+
+function matchHeader(header, aliases){
+  const h = String(header||'').trim().toLowerCase();
+  for(const field in aliases){
+    if(aliases[field].some(a=>h===a || h.includes(a))) return field;
+  }
+  return null;
+}
+
+function rowsToListEntries(rows, listKey){
+  const cfg = LIST_FIELD_MAP[listKey];
+  if(!rows.length) return [];
+  const headers = Object.keys(rows[0]);
+  const headerToField = {};
+  headers.forEach(h=>{ const f = matchHeader(h, cfg.aliases); if(f) headerToField[h] = f; });
+  return rows.map(row=>{
+    const entry = {};
+    cfg.fields.forEach(f=>entry[f] = '');
+    headers.forEach(h=>{
+      const field = headerToField[h];
+      if(field) entry[field] = row[h];
+    });
+    if(listKey === 'penyakit'){
+      entry.jumlah = Number(entry.jumlah) || 1;
+      entry.status = entry.status || 'Aktif';
+      const wm = state.wilayahMap;
+      entry.lat = wm.lat + (Math.random()-0.5)*0.01;
+      entry.lng = wm.lng + (Math.random()-0.5)*0.01;
+    }
+    if(listKey === 'petugasDesa' || listKey === 'petugasKesehatan'){
+      entry.aktif = !(String(entry.aktif).toLowerCase().includes('nonaktif') || String(entry.aktif).toLowerCase()==='false');
+    }
+    return entry;
+  }).filter(e => Object.values(e).some(v => String(v).trim() !== ''));
+}
+
+function appendToList(listKey, entries){
+  if(!entries.length) return;
+  state[listKey] = [...entries, ...state[listKey]];
+  if(listKey==='berita') renderBerita();
+  if(listKey==='layanan') renderLayanan();
+  if(listKey==='penyakit') renderPenyakit();
+  if(listKey==='petugasDesa') renderPetugas('petugasDesa','petugasDesaGrid');
+  if(listKey==='petugasKesehatan') renderPetugas('petugasKesehatan','petugasKesehatanGrid');
+  markDirty();
+  showToast(`${entries.length} data ditambahkan ke ${LIST_LABELS[listKey]} — klik "Simpan Perubahan"`);
+}
+
+/* ---------- Excel / CSV ---------- */
+async function importExcelFile(file){
+  if(typeof XLSX === 'undefined'){ showToast('Library Excel gagal dimuat, cek koneksi internet'); return; }
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, {type:'array'});
+  const sheet = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(sheet, {defval:''});
+  if(!rows.length){ showToast('Sheet Excel/CSV kosong'); return; }
+  const listKey = pickTargetList();
+  if(!listKey) return;
+  appendToList(listKey, rowsToListEntries(rows, listKey));
+}
+
+/* ---------- Word (.docx) ---------- */
+async function importDocxFile(file){
+  if(typeof mammoth === 'undefined'){ showToast('Library Word gagal dimuat, cek koneksi internet'); return; }
+  const buf = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({arrayBuffer: buf});
+  const text = (result.value || '').trim();
+  if(!text){ showToast('Tidak ada teks yang terbaca dari file Word'); return; }
+  addTextAsBerita(file.name, text);
+}
+
+/* ---------- PDF ---------- */
+async function importPdfFile(file){
+  if(typeof pdfjsLib === 'undefined'){ showToast('Library PDF gagal dimuat, cek koneksi internet'); return; }
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  let text = '';
+  for(let i=1; i<=pdf.numPages; i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(it=>it.str).join(' ') + '\n';
+  }
+  text = text.trim();
+  if(!text){ showToast('Tidak ada teks yang terbaca dari file PDF (mungkin hasil pindai/scan)'); return; }
+  addTextAsBerita(file.name, text);
+}
+
+function addTextAsBerita(filename, text){
+  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+  const judul = (lines[0] || filename).slice(0, 120);
+  const ringkas = lines.slice(1).join(' ').slice(0, 600) || text.slice(0, 600);
+  const tanggal = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+  state.berita.unshift({tanggal, judul, ringkas});
+  renderBerita();
+  markDirty();
+  showToast(`Isi "${filename}" ditambahkan sebagai berita — cek dan sunting hasilnya lalu simpan`);
+}
+
+/* ---------- Gambar (jpg/png) ---------- */
+function importImageFile(file){
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    state.galeri.push(reader.result);
+    renderGaleri();
+    markDirty();
+    showToast(`Foto "${file.name}" ditambahkan ke Galeri`);
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ---------- dispatcher ---------- */
+document.getElementById('importDocBtn').onclick = ()=>document.getElementById('importDocFile').click();
+document.getElementById('importDocFile').onchange = async (e)=>{
+  const files = Array.from(e.target.files || []);
+  e.target.value = '';
+  for(const file of files){
+    const name = file.name.toLowerCase();
+    try{
+      if(name.endsWith('.docx')) await importDocxFile(file);
+      else if(name.endsWith('.pdf')) await importPdfFile(file);
+      else if(name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')) await importExcelFile(file);
+      else if(name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.png') || file.type.startsWith('image/')) importImageFile(file);
+      else showToast(`Format file "${file.name}" belum didukung`);
+    }catch(err){
+      console.error(err);
+      showToast(`Gagal membaca "${file.name}"`);
+    }
+  }
+};
+
+</script>
+<script>
+/* ============================================================
+   MODULE 10: NAVIGASI MOBILE & INISIALISASI
+   ============================================================ */
 /* ---------- mobile nav ---------- */
 document.getElementById('navMobileBtn').onclick = ()=>{
   const ul = document.querySelector('nav ul');
@@ -1147,6 +1577,7 @@ document.getElementById('navMobileBtn').onclick = ()=>{
   ul.style.cssText = isOpen ? '' : 'display:flex;position:absolute;top:100%;left:0;right:0;background:var(--paper);flex-direction:column;padding:18px 28px;border-bottom:1px solid var(--line);gap:16px;';
 };
 
+restoreAdminSession();
 loadState();
 </script>
 </body>
