@@ -183,13 +183,19 @@ body.editing .delBtn{display:inline-flex;align-items:center;gap:4px;}
   background-size:cover;background-position:center;
   color:var(--paper);position:relative;overflow:hidden;
 }
+.heroBgActions{position:absolute;top:18px;right:28px;z-index:5;display:none;gap:8px;}
+body.editing .heroBgActions{display:flex;}
 .heroBgBtn{
-  display:none;position:absolute;top:18px;right:28px;z-index:5;
   font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.03em;
   border:1.5px dashed var(--gold-soft);background:rgba(8,40,56,.55);color:var(--gold-soft);
-  border-radius:6px;padding:7px 12px;align-items:center;gap:6px;
+  border-radius:6px;padding:7px 12px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;
 }
-body.editing .heroBgBtn{display:inline-flex;}
+.heroBgResetBtn{
+  font-family:'Space Mono',monospace;font-size:11px;font-weight:700;
+  border:1.5px solid var(--red);background:rgba(8,40,56,.55);color:#e39a9c;
+  border-radius:6px;padding:7px 10px;display:none;align-items:center;gap:6px;cursor:pointer;
+}
+.hero.has-bg-photo .heroBgResetBtn{display:inline-flex;}
 .hero .wrap{
   display:grid;grid-template-columns:1.1fr .9fr;gap:40px;
   padding:64px 28px 0;align-items:center;
@@ -228,7 +234,7 @@ section{padding:76px 0;}
   background:linear-gradient(160deg,#c7d3d8,#9db2bb);
   display:flex;align-items:center;justify-content:center;
   color:var(--navy-deep);font-family:'Space Mono',monospace;font-size:12px;text-align:center;padding:16px;
-  border:1px solid var(--line);
+  border:1px solid var(--line);position:relative;
 }
 .sambutan blockquote{
   font-family:'Fraunces',serif;font-size:21px;font-style:italic;color:var(--navy-deep);
@@ -236,6 +242,48 @@ section{padding:76px 0;}
 }
 .sambutan .name{font-weight:700;font-size:15px;}
 .sambutan .role{font-family:'Space Mono',monospace;font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;}
+
+/* ===== FOTO: UPLOAD / GANTI FOTO (umum) ===== */
+.photoSlot{position:relative;overflow:hidden;}
+.photoImg{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  border-radius:inherit;display:none;z-index:1;
+}
+.photoUploadBtn{
+  position:absolute;bottom:8px;right:8px;z-index:3;display:none;
+  font-family:'Space Mono',monospace;font-size:11px;font-weight:700;
+  border:1.5px dashed var(--navy);background:var(--white);color:var(--navy);
+  border-radius:6px;padding:6px 9px;cursor:pointer;align-items:center;gap:4px;
+}
+body.editing .photoUploadBtn{display:inline-flex;}
+.photoRemoveBtn{
+  position:absolute;top:8px;right:8px;z-index:3;display:none;
+  font-family:'Space Mono',monospace;font-size:11px;font-weight:700;line-height:1;
+  border:1px solid var(--red);background:var(--white);color:var(--red);
+  border-radius:100px;width:24px;height:24px;cursor:pointer;
+  align-items:center;justify-content:center;
+}
+body.editing .photoSlot.has-photo .photoRemoveBtn{display:inline-flex;}
+
+/* avatar kecil (struktur organisasi & kartu petugas) pakai baris tombol, bukan overlay */
+.avatarPhotoRow{display:none;gap:6px;justify-content:center;margin:0 0 8px;}
+body.editing .avatarPhotoRow{display:flex;}
+.avatarPhotoBtn{
+  font-family:'Space Mono',monospace;font-size:9.5px;font-weight:700;
+  border:1px dashed var(--navy);background:var(--white);color:var(--navy);
+  border-radius:5px;padding:2px 7px;cursor:pointer;
+}
+.avatarPhotoBtn.remove{border-color:var(--red);color:var(--red);display:none;}
+.has-photo .avatarPhotoBtn.remove{display:inline-block;}
+.org-avatar{
+  width:52px;height:52px;border-radius:50%;margin:0 auto 8px;
+  background:linear-gradient(160deg,#c7d3d8,#9db2bb);
+  display:flex;align-items:center;justify-content:center;color:var(--navy-deep);
+  font-size:20px;overflow:hidden;position:relative;
+}
+.org-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:none;}
+.org-avatar.has-photo .initials{display:none;}
+.org-avatar.has-photo img{display:block;}
 
 /* ===== PROFIL TABS ===== */
 .tabs{display:flex;gap:6px;margin-bottom:26px;flex-wrap:wrap;}
@@ -359,8 +407,11 @@ body.editing .mapEditBtn{display:inline-flex;align-items:center;gap:6px;}
 .petugas-avatar{
   width:52px;height:52px;border-radius:50%;background:linear-gradient(160deg,#c7d3d8,#9db2bb);
   display:flex;align-items:center;justify-content:center;color:var(--navy-deep);
-  font-family:'Fraunces',serif;font-weight:700;font-size:17px;
+  font-family:'Fraunces',serif;font-weight:700;font-size:17px;position:relative;overflow:hidden;
 }
+.petugas-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:none;}
+.petugas-avatar.has-photo .initials{display:none;}
+.petugas-avatar.has-photo img{display:block;}
 .petugas-card h4{font-size:15.5px;margin-top:4px;}
 .petugas-card .jab{font-size:13px;color:var(--ink-soft);}
 .petugas-card .kontak{font-family:'Space Mono',monospace;font-size:12px;color:var(--ink-soft);}
@@ -451,7 +502,10 @@ body.editing .dataToolbar{display:flex;}
 
 <!-- HERO -->
 <section class="hero" id="heroSection">
-  <button class="heroBgBtn" id="editHeroBg">🖼 Ganti Background</button>
+  <div class="heroBgActions">
+    <button class="heroBgBtn" id="editHeroBg" type="button">🖼 Ganti Background</button>
+    <button class="heroBgResetBtn" id="resetHeroBg" type="button" title="Kembali ke warna navy bawaan">↺ Reset</button>
+  </div>
   <div class="wrap">
     <div>
       <div class="hero-eyebrow"><span>Profil Kelurahan</span><span class="coord">0°01′ LU · Tepi Sungai Kapuas</span></div>
@@ -495,7 +549,12 @@ body.editing .dataToolbar{display:flex;}
     <div class="eyebrow">Sambutan</div>
     <h2 style="margin-top:10px;margin-bottom:30px;">Kata Pengantar Lurah</h2>
     <div class="sambutan">
-      <div class="sambutan-photo" data-editable data-key="sambutan.foto">Foto Lurah<br>(ganti teks ini menjadi keterangan foto)</div>
+      <div class="sambutan-photo photoSlot" data-photo-key="sambutan">
+        <span data-editable data-key="sambutan.foto">Foto Lurah<br>(ganti teks ini menjadi keterangan foto)</span>
+        <img class="photoImg" alt="Foto Lurah">
+        <button class="photoUploadBtn" type="button">📷 Foto</button>
+        <button class="photoRemoveBtn" type="button" title="Hapus foto">✕</button>
+      </div>
       <div>
         <blockquote data-editable data-key="sambutan.kutipan">"Website ini kami hadirkan agar warga Dalam Bugis semakin mudah mengakses informasi, mengurus layanan, dan mengenal kampung sendiri lebih dekat. Selamat datang, dan mari kita jaga kelurahan ini bersama-sama."</blockquote>
         <div class="name" data-editable data-key="sambutan.nama">Nama Lurah</div>
@@ -543,14 +602,34 @@ body.editing .dataToolbar{display:flex;}
     <div class="eyebrow">Organisasi</div>
     <div class="section-head"><h2>Struktur Organisasi</h2></div>
     <div class="org-tree">
-      <div class="org-node"><div class="jab">Lurah</div><div class="nm" data-editable data-key="struktur.lurah">Nama Lurah</div></div>
+      <div class="org-node" data-photo-key="orgLurah">
+        <div class="org-avatar"><span class="initials">👤</span><img class="photoImg" alt=""></div>
+        <div class="avatarPhotoRow"><button class="avatarPhotoBtn" type="button">📷 Foto</button><button class="avatarPhotoBtn remove" type="button">✕</button></div>
+        <div class="jab">Lurah</div><div class="nm" data-editable data-key="struktur.lurah">Nama Lurah</div>
+      </div>
       <div class="org-connector"></div>
-      <div class="org-node"><div class="jab">Sekretaris Lurah</div><div class="nm" data-editable data-key="struktur.sekretaris">Nama Sekretaris</div></div>
+      <div class="org-node" data-photo-key="orgSekretaris">
+        <div class="org-avatar"><span class="initials">👤</span><img class="photoImg" alt=""></div>
+        <div class="avatarPhotoRow"><button class="avatarPhotoBtn" type="button">📷 Foto</button><button class="avatarPhotoBtn remove" type="button">✕</button></div>
+        <div class="jab">Sekretaris Lurah</div><div class="nm" data-editable data-key="struktur.sekretaris">Nama Sekretaris</div>
+      </div>
       <div class="org-connector"></div>
       <div class="org-row">
-        <div class="org-node"><div class="jab">Kasi Pemerintahan &amp; Trantib</div><div class="nm" data-editable data-key="struktur.kasi1">Nama Pejabat</div></div>
-        <div class="org-node"><div class="jab">Kasi Kesejahteraan Sosial</div><div class="nm" data-editable data-key="struktur.kasi2">Nama Pejabat</div></div>
-        <div class="org-node"><div class="jab">Kasi Ekonomi &amp; Pembangunan</div><div class="nm" data-editable data-key="struktur.kasi3">Nama Pejabat</div></div>
+        <div class="org-node" data-photo-key="orgKasi1">
+          <div class="org-avatar"><span class="initials">👤</span><img class="photoImg" alt=""></div>
+          <div class="avatarPhotoRow"><button class="avatarPhotoBtn" type="button">📷 Foto</button><button class="avatarPhotoBtn remove" type="button">✕</button></div>
+          <div class="jab">Kasi Pemerintahan &amp; Trantib</div><div class="nm" data-editable data-key="struktur.kasi1">Nama Pejabat</div>
+        </div>
+        <div class="org-node" data-photo-key="orgKasi2">
+          <div class="org-avatar"><span class="initials">👤</span><img class="photoImg" alt=""></div>
+          <div class="avatarPhotoRow"><button class="avatarPhotoBtn" type="button">📷 Foto</button><button class="avatarPhotoBtn remove" type="button">✕</button></div>
+          <div class="jab">Kasi Kesejahteraan Sosial</div><div class="nm" data-editable data-key="struktur.kasi2">Nama Pejabat</div>
+        </div>
+        <div class="org-node" data-photo-key="orgKasi3">
+          <div class="org-avatar"><span class="initials">👤</span><img class="photoImg" alt=""></div>
+          <div class="avatarPhotoRow"><button class="avatarPhotoBtn" type="button">📷 Foto</button><button class="avatarPhotoBtn remove" type="button">✕</button></div>
+          <div class="jab">Kasi Ekonomi &amp; Pembangunan</div><div class="nm" data-editable data-key="struktur.kasi3">Nama Pejabat</div>
+        </div>
       </div>
     </div>
   </div>
@@ -791,7 +870,7 @@ const defaultPetugasKesehatan = [
 
 const defaultHeroBg = null; // null = pakai gradasi navy bawaan
 
-let state = { texts:{}, heroBg:null, berita:null, layanan:null, galeri:null, wilayahMap:null, penyakit:null, petugasDesa:null, petugasKesehatan:null };
+let state = { texts:{}, heroBg:null, photos:{}, berita:null, layanan:null, galeri:null, wilayahMap:null, penyakit:null, petugasDesa:null, petugasKesehatan:null };
 let wilayahMapObj = null, kesehatanMapObj = null;
 let pendingClickLatLng = null; // titik yang baru diklik admin di peta kesehatan, menunggu dipakai
 
@@ -825,9 +904,10 @@ async function loadState(){
     const res = await storageGet('site-data');
     if(res && res.value){
       const parsed = JSON.parse(res.value);
-      state = Object.assign({texts:{},heroBg:null,berita:null,layanan:null,galeri:null,wilayahMap:null,penyakit:null,petugasDesa:null,petugasKesehatan:null}, parsed);
+      state = Object.assign({texts:{},heroBg:null,photos:{},berita:null,layanan:null,galeri:null,wilayahMap:null,penyakit:null,petugasDesa:null,petugasKesehatan:null}, parsed);
     }
   }catch(e){ /* belum ada data tersimpan, pakai default */ }
+  if(!state.photos) state.photos = {};
   if(!state.berita) state.berita = defaultBerita;
   if(!state.layanan) state.layanan = defaultLayanan;
   if(!state.galeri) state.galeri = defaultGaleri;
@@ -837,6 +917,7 @@ async function loadState(){
   if(!state.petugasKesehatan) state.petugasKesehatan = defaultPetugasKesehatan;
   applyTexts();
   updateHeroBg();
+  initStaticPhotoSlots();
   renderBerita();
   renderLayanan();
   renderGaleri();
@@ -893,8 +974,14 @@ function renderBerita(){
   state.berita.forEach((b,i)=>{
     const card = document.createElement('div');
     card.className = 'berita-card';
+    const hasPhoto = !!b.foto;
     card.innerHTML = `
-      <div class="berita-img">Foto Kegiatan</div>
+      <div class="berita-img photoSlot${hasPhoto?' has-photo':''}" data-list-photo="berita:${i}">
+        <span>Foto Kegiatan</span>
+        <img class="photoImg" src="${b.foto||''}" alt="${b.judul}" style="${hasPhoto?'display:block;':''}">
+        <button class="photoUploadBtn" type="button">📷 Foto</button>
+        <button class="photoRemoveBtn" type="button" title="Hapus foto">✕</button>
+      </div>
       <div class="berita-body">
         <div class="berita-date" data-list="berita" data-idx="${i}" data-field="tanggal" contenteditable="false">${b.tanggal}</div>
         <h4 data-list="berita" data-idx="${i}" data-field="judul" contenteditable="false">${b.judul}</h4>
@@ -904,6 +991,7 @@ function renderBerita(){
     grid.appendChild(card);
   });
   bindListFields();
+  bindListPhotoButtons();
 }
 
 function renderLayanan(){
@@ -998,11 +1086,16 @@ function renderPetugas(listKey, gridId){
   grid.innerHTML = '';
   state[listKey].forEach((p,i)=>{
     const initials = (p.nama||'').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase() || '?';
+    const hasPhoto = !!p.foto;
     const card = document.createElement('div');
     card.className = 'petugas-card';
     card.innerHTML = `
       <button class="delBtn" data-remove="${listKey}" data-idx="${i}">✕</button>
-      <div class="petugas-avatar">${initials}</div>
+      <div class="petugas-avatar${hasPhoto?' has-photo':''}"><span class="initials">${initials}</span><img src="${p.foto||''}" alt="${p.nama}"></div>
+      <div class="avatarPhotoRow" data-list-photo="${listKey}:${i}">
+        <button class="avatarPhotoBtn" type="button">📷 Foto</button>
+        <button class="avatarPhotoBtn remove${hasPhoto?'':''}" type="button" style="${hasPhoto?'display:inline-block;':''}">✕</button>
+      </div>
       <h4 data-list="${listKey}" data-idx="${i}" data-field="nama" contenteditable="false">${p.nama}</h4>
       <div class="jab" data-list="${listKey}" data-idx="${i}" data-field="jabatan" contenteditable="false">${p.jabatan}</div>
       <div class="kontak" data-list="${listKey}" data-idx="${i}" data-field="kontak" contenteditable="false">${p.kontak}</div>
@@ -1010,6 +1103,7 @@ function renderPetugas(listKey, gridId){
     grid.appendChild(card);
   });
   bindListFields();
+  bindListPhotoButtons();
   document.querySelectorAll(`[data-toggle-active="${listKey}"]`).forEach(btn=>{
     btn.onclick = ()=>{
       if(!editing) return;
@@ -1097,15 +1191,23 @@ function updateHeroBg(){
   const hero = document.getElementById('heroSection');
   if(state.heroBg){
     hero.style.backgroundImage = `linear-gradient(180deg, rgba(13,59,84,.82), rgba(8,40,56,.9)), url('${state.heroBg}')`;
+    hero.classList.add('has-bg-photo');
   }else{
     hero.style.backgroundImage = ''; // kembali ke gradasi navy bawaan dari CSS
+    hero.classList.remove('has-bg-photo');
   }
 }
 document.getElementById('editHeroBg').onclick = ()=>{
   if(!editing) return;
-  const url = prompt('Tempelkan URL gambar background (kosongkan untuk kembali ke warna navy bawaan):', state.heroBg || '');
-  if(url === null) return;
-  state.heroBg = url.trim() || null;
+  triggerPhotoUpload(dataUrl=>{
+    state.heroBg = dataUrl;
+    updateHeroBg();
+    markDirty();
+  });
+};
+document.getElementById('resetHeroBg').onclick = ()=>{
+  if(!editing) return;
+  state.heroBg = null;
   updateHeroBg();
   markDirty();
 };
@@ -1146,7 +1248,120 @@ function markDirty(){
 </script>
 <script>
 /* ============================================================
-   MODULE 5: OTENTIKASI ADMIN & MODE EDIT
+   MODULE 5: FOTO — SAMBUTAN, STRUKTUR ORGANISASI, BERITA, PETUGAS
+   ============================================================
+   Modul ini menyediakan mekanisme umum unggah foto (dari file di
+   perangkat, disimpan sebagai data URL base64) yang dipakai oleh:
+   - Foto sambutan Lurah (slot statis)
+   - Foto tiap jabatan di Struktur Organisasi (5 slot statis)
+   - Foto tiap kartu Berita (per item, dinamis)
+   - Foto avatar tiap Petugas, Desa maupun Kesehatan (per item, dinamis)
+   Catatan: karena disimpan sebagai base64 di dalam data situs, unggah
+   foto beresolusi sangat besar akan memperbesar ukuran data tersimpan.
+   Disarankan memakai foto yang sudah dikompres/diperkecil dahulu. */
+
+/* ---------- input file tersembunyi bersama ---------- */
+const sharedPhotoInput = document.createElement('input');
+sharedPhotoInput.type = 'file';
+sharedPhotoInput.accept = 'image/jpeg,image/png,image/webp';
+sharedPhotoInput.style.display = 'none';
+document.body.appendChild(sharedPhotoInput);
+let pendingPhotoCallback = null;
+
+function triggerPhotoUpload(callback){
+  if(!editing) return;
+  pendingPhotoCallback = callback;
+  sharedPhotoInput.value = '';
+  sharedPhotoInput.click();
+}
+sharedPhotoInput.onchange = ()=>{
+  const file = sharedPhotoInput.files[0];
+  if(!file || !pendingPhotoCallback) return;
+  const cb = pendingPhotoCallback;
+  pendingPhotoCallback = null;
+  const reader = new FileReader();
+  reader.onload = ()=>{ cb(reader.result); showToast('Foto diperbarui — klik "Simpan Perubahan" untuk menyimpan'); };
+  reader.onerror = ()=>showToast('Gagal membaca file foto');
+  reader.readAsDataURL(file);
+};
+
+/* ---------- slot foto statis (sambutan & struktur organisasi) ---------- */
+function initStaticPhotoSlots(){
+  document.querySelectorAll('[data-photo-key]').forEach(container=>{
+    const key = container.getAttribute('data-photo-key');
+    const img = container.querySelector('.photoImg, .org-avatar img');
+    const uploadBtn = container.querySelector('.photoUploadBtn, .avatarPhotoBtn:not(.remove)');
+    const removeBtn = container.querySelector('.photoRemoveBtn, .avatarPhotoBtn.remove');
+    const visualTarget = container.classList.contains('org-node') ? container.querySelector('.org-avatar') : container;
+    if(!img || !uploadBtn) return;
+
+    function apply(){
+      const url = state.photos[key];
+      if(url){
+        img.src = url;
+        img.style.display = 'block';
+        visualTarget.classList.add('has-photo');
+        if(removeBtn) removeBtn.style.display = 'inline-flex';
+      }else{
+        img.removeAttribute('src');
+        img.style.display = 'none';
+        visualTarget.classList.remove('has-photo');
+        if(removeBtn) removeBtn.style.display = 'none';
+      }
+    }
+    uploadBtn.onclick = ()=>{
+      if(!editing) return;
+      triggerPhotoUpload(dataUrl=>{ state.photos[key] = dataUrl; apply(); markDirty(); });
+    };
+    if(removeBtn){
+      removeBtn.onclick = ()=>{
+        if(!editing) return;
+        delete state.photos[key];
+        apply();
+        markDirty();
+      };
+    }
+    apply();
+  });
+}
+
+/* ---------- slot foto pada daftar dinamis (berita & petugas) ---------- */
+function bindListPhotoButtons(){
+  document.querySelectorAll('[data-list-photo]').forEach(container=>{
+    const [listKey, idxStr] = container.getAttribute('data-list-photo').split(':');
+    const idx = +idxStr;
+    const uploadBtn = container.querySelector('.photoUploadBtn, .avatarPhotoBtn:not(.remove)');
+    const removeBtn = container.querySelector('.photoRemoveBtn, .avatarPhotoBtn.remove');
+    if(!uploadBtn) return;
+    const rerender = ()=>{
+      if(listKey === 'berita') renderBerita();
+      else renderPetugas(listKey, listKey === 'petugasDesa' ? 'petugasDesaGrid' : 'petugasKesehatanGrid');
+    };
+    uploadBtn.onclick = (e)=>{
+      e.stopPropagation();
+      if(!editing) return;
+      triggerPhotoUpload(dataUrl=>{
+        state[listKey][idx].foto = dataUrl;
+        markDirty();
+        rerender();
+      });
+    };
+    if(removeBtn){
+      removeBtn.onclick = (e)=>{
+        e.stopPropagation();
+        if(!editing) return;
+        delete state[listKey][idx].foto;
+        markDirty();
+        rerender();
+      };
+    }
+  });
+}
+
+</script>
+<script>
+/* ============================================================
+   MODULE 6: OTENTIKASI ADMIN & MODE EDIT
    ============================================================ */
 /* ---------- admin auth ----------
    Situs ini statis (tanpa server), jadi ini BUKAN keamanan tingkat server —
@@ -1263,7 +1478,7 @@ document.getElementById('discardBtn').onclick = ()=>{
 </script>
 <script>
 /* ============================================================
-   MODULE 6: TOMBOL TAMBAH DATA
+   MODULE 7: TOMBOL TAMBAH DATA
    ============================================================ */
 /* ---------- add buttons ---------- */
 document.getElementById('addBerita').onclick = ()=>{
@@ -1334,7 +1549,7 @@ document.getElementById('addRtRow').onclick = ()=>{
 </script>
 <script>
 /* ============================================================
-   MODULE 7: TAB NAVIGASI (PROFIL & PETUGAS)
+   MODULE 8: TAB NAVIGASI (PROFIL & PETUGAS)
    ============================================================ */
 /* ---------- tabs ---------- */
 document.querySelectorAll('.tab-btn').forEach(btn=>{
@@ -1359,7 +1574,7 @@ document.querySelectorAll('[data-tab2]').forEach(btn=>{
 </script>
 <script>
 /* ============================================================
-   MODULE 8: EKSPOR / IMPOR DATA (JSON)
+   MODULE 9: EKSPOR / IMPOR DATA (JSON)
    ============================================================ */
 /* ---------- ekspor / impor data ---------- */
 document.getElementById('exportBtn').onclick = ()=>{
@@ -1381,7 +1596,8 @@ document.getElementById('importFile').onchange = (e)=>{
   reader.onload = async ()=>{
     try{
       const parsed = JSON.parse(reader.result);
-      state = Object.assign({texts:{},heroBg:null,berita:null,layanan:null,galeri:null,wilayahMap:null,penyakit:null,petugasDesa:null,petugasKesehatan:null}, parsed);
+      state = Object.assign({texts:{},heroBg:null,photos:{},berita:null,layanan:null,galeri:null,wilayahMap:null,penyakit:null,petugasDesa:null,petugasKesehatan:null}, parsed);
+      if(!state.photos) state.photos = {};
       if(!state.berita) state.berita = defaultBerita;
       if(!state.layanan) state.layanan = defaultLayanan;
       if(!state.galeri) state.galeri = defaultGaleri;
@@ -1391,6 +1607,7 @@ document.getElementById('importFile').onchange = (e)=>{
       if(!state.petugasKesehatan) state.petugasKesehatan = defaultPetugasKesehatan;
       applyTexts();
       updateHeroBg();
+      initStaticPhotoSlots();
       renderBerita(); renderLayanan(); renderGaleri(); renderPenyakit();
       renderPetugas('petugasDesa','petugasDesaGrid');
       renderPetugas('petugasKesehatan','petugasKesehatanGrid');
@@ -1408,7 +1625,7 @@ document.getElementById('importFile').onchange = (e)=>{
 </script>
 <script>
 /* ============================================================
-   MODULE 9: IMPOR WORD / PDF / EXCEL / GAMBAR
+   MODULE 10: IMPOR WORD / PDF / EXCEL / GAMBAR
    ============================================================
    Semua parsing berjalan di browser lewat library eksternal (mammoth,
    pdf.js, SheetJS) yang dimuat dari CDN — butuh koneksi internet.
@@ -1568,7 +1785,7 @@ document.getElementById('importDocFile').onchange = async (e)=>{
 </script>
 <script>
 /* ============================================================
-   MODULE 10: NAVIGASI MOBILE & INISIALISASI
+   MODULE 11: NAVIGASI MOBILE & INISIALISASI
    ============================================================ */
 /* ---------- mobile nav ---------- */
 document.getElementById('navMobileBtn').onclick = ()=>{
